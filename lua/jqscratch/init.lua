@@ -41,55 +41,45 @@ M.open = function()
 		end,
 	})
 
+	vim.api.nvim_create_augroup("jqscratch", { clear = true })
 	Command_ids = {}
-	table.insert(
-		Command_ids,
-		vim.api.nvim_create_autocmd("TextChangedI", {
-			group = vim.api.nvim_create_augroup("jqscratch", { clear = true }),
-			buffer = Scratch_buf,
-			callback = function()
-				Run()
-			end,
-		})
-	)
+	vim.api.nvim_create_autocmd("TextChangedI", {
+		group = vim.api.nvim_create_augroup("jqscratch", { clear = false }),
+		buffer = Scratch_buf,
+		callback = function()
+			Run()
+		end,
+	})
 
-	table.insert(
-		Command_ids,
-		vim.api.nvim_create_autocmd("BufEnter", {
-			group = vim.api.nvim_create_augroup("jqscratch", { clear = true }),
-			callback = function()
-				if vim.bo.filetype == "json" then
-					M.json_file_path = vim.fn.expand("%")
-				end
-			end,
-		})
-	)
+	vim.api.nvim_create_autocmd("BufEnter", {
+		group = vim.api.nvim_create_augroup("jqscratch", { clear = false }),
+		callback = function()
+			if vim.bo.filetype == "json" then
+				M.json_file_path = vim.fn.expand("%")
+			end
+		end,
+	})
 
 	for _, buf in pairs({ Scratch_buf, Results_buf }) do
-		table.insert(
-			Command_ids,
-			vim.api.nvim_create_autocmd("WinClosed", {
-				group = vim.api.nvim_create_augroup("jqscratch", { clear = false }),
-				buffer = buf,
-				callback = function()
-					M.close()
-				end,
-			})
-		)
+		vim.api.nvim_create_autocmd("WinClosed", {
+			group = vim.api.nvim_create_augroup("jqscratch", { clear = false }),
+			buffer = buf,
+			callback = function()
+				M.close()
+			end,
+		})
 	end
 end
 
 M.close = function()
+	vim.api.nvim_del_augroup_by_name("jqscratch")
+
 	if Scratch_win_id ~= nil and vim.api.nvim_win_is_valid(Scratch_win_id) then
 		vim.api.nvim_win_close(Scratch_win_id, false)
 	end
 	if Results_win_id ~= nil and vim.api.nvim_win_is_valid(Results_win_id) then
 		vim.api.nvim_win_close(Results_win_id, false)
 	end
-	vim.api.nvim_del_augroup_by_name("jqscratch")
-	-- for _, rhs in pairs(Command_ids) do
-	--   vim.api.nvim_del_autocmd(rhs)
-	-- end
 end
 
 M.toggle = function()
