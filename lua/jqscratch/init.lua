@@ -4,6 +4,7 @@ local M = {}
 
 M.opts = {
 	data_dir = vim.fn.stdpath("data") .. "/jqscratch",
+	debounce = 200,
 }
 
 Scratch_win_id = nil
@@ -13,8 +14,6 @@ M.open = function()
 	M.is_open = true
 	local scratch_file_path = utils.create_data_file(M.opts)
 	M.json_file_path = vim.fn.expand("%")
-	print(M.json_file_path)
-	-- TODO handle failure to create file
 
 	-- Create results buf
 	Results_buf = vim.api.nvim_create_buf(true, true)
@@ -42,12 +41,13 @@ M.open = function()
 	})
 
 	vim.api.nvim_create_augroup("jqscratch", { clear = true })
-	Command_ids = {}
+	Timer = vim.uv.new_timer()
 	vim.api.nvim_create_autocmd("TextChangedI", {
 		group = vim.api.nvim_create_augroup("jqscratch", { clear = false }),
 		buffer = Scratch_buf,
 		callback = function()
-			Run()
+			Timer:stop()
+			Timer:start(M.opts.debounce, 0, vim.schedule_wrap(Run))
 		end,
 	})
 
