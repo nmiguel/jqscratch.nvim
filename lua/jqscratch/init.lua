@@ -99,6 +99,10 @@ Run = function()
 	local cursor = vim.api.nvim_win_get_cursor(0)[1]
 	local query = vim.api.nvim_buf_get_lines(Scratch_buf, cursor - 1, cursor, true)[1]
 
+	if string.len(query) > 0 and string.sub(query, 1, 1) == "#" then
+		return
+	end
+
 	local result = vim.fn.system({ "jq", query, M.json_file_path })
 
 	if result == nil then
